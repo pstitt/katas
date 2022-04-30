@@ -1,0 +1,44 @@
+buildscript {
+    ext {
+        lombokVersion = '1.18.24'
+        junitVersion = '5.8.2'
+    }
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "6.4.3"
+    id 'org.springframework.boot' version '2.6.7'
+    id "com.github.ben-manes.versions" version "0.20.0"
+}
+
+repositories {
+    mavenCentral()
+}
+
+apply plugin: 'java'
+apply plugin: 'io.spring.dependency-management'
+
+group = 'stittp'
+version = '0.1'
+sourceCompatibility = 17
+targetCompatibility = 17
+
+dependencies {
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation "org.springframework.boot:spring-boot-starter-webflux"
+    implementation 'com.google.guava:guava:31.1-jre'
+}
+
+dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    testImplementation 'org.mockito:mockito-core:4.5.1'
+    testImplementation 'io.projectreactor:reactor-test'
+}
+
+test {
+    useJUnitPlatform()
+}

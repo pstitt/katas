@@ -1,12 +1,12 @@
 package kata.countingcodelines;
 
-import jdk.nashorn.api.scripting.URLReader;
+import com.google.common.io.CharStreams;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.io.StringReader;
+import java.io.*;
 import java.net.URL;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -88,14 +88,17 @@ class LineCountTest {
     }
 
     @Test
-    void exampleFile() {
+    void exampleFile() throws IOException {
         assertEquals(3101, countLinesInFile("/HireCars4USession.java"));
     }
 
-    private int countLinesInFile(String resource) {
+    private int countLinesInFile(String resource) throws IOException {
         URL url = this.getClass().getResource(resource);
-        JavaSourceReader reader = new JavaSourceReader(new URLReader(url));
-        return reader.countSignificantLines();
+        InputStream is = (InputStream) url.getContent();
+
+        try (Reader reader = new InputStreamReader(is)) {
+            return countLines(CharStreams.toString(reader));
+        }
     }
 
     private int countLines(String text) {
