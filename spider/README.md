@@ -24,5 +24,6 @@ Key design decisions:
 - The main SpiderTest class user some test helpers to make the tests readable and hide the mocking code which can otherwise get in the way of readability. It takes some effort to refactor the test code to achieve this, but once done makes it easy to add new tests. The helpers also include a PageVisitor implementation that allows asserting on the results.
 - Additional unit tests are only written for the Link class which has the key business logic used by the crawler. These tests are easier to write and maintain than the Spider tests, so the aim would be to have more tests at this level and use the Spider tests just for high level flows. E.g. a single Spider test to test internal vs external links are handled correctly, but many Link tests to test different types of internal and external links.
 ## Performance
-- TODO - use concurrency to implement concurrent page processing and handle thread safety around the visitor methods to prevent corruption of the outputs (e.g. console output interleaving)
-- TODO - work out how to know when the crawl is complete.
+- Added FixedThreadPool Executor for concurrent processing of pages
+- TODO - work out a more elegant way of detecting completion other than busy wait
+- TODO - Spider uses synchronized blocks to update context and to prevent PageVisitor being called concurrently. Look into better ways of maintaining thread safety.

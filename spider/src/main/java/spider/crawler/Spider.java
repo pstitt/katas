@@ -11,6 +11,8 @@ import java.net.MalformedURLException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -18,18 +20,50 @@ import java.util.function.Consumer;
 public class Spider implements Crawler {
   private final PageParser parser;
   private final SpiderContext context = new SpiderContext();
+  private ExecutorService executor;
 
   @Override
-  public void crawl(String pageURL, PageVisitor pageVisitor) {
-    final var link = toLink(pageURL);
+  public void crawl(String startURL, PageVisitor pageVisitor) throws InterruptedException {
+    executor = Executors.newFixedThreadPool(10);
+    processPage(startURL, pageVisitor);
+    waitToComplete();
+    executor.shutdown();
+  }
 
-    if (context.alreadyVisited(link)) {
-      return;
+  private void waitToComplete() throws InterruptedException {
+    // A bit of a hack - couldn't quickly figure out a way of using ExecutorService to allow new tasks and wait for current and new tasks to finish
+    Thread.sleep(50);
+    while (context.stillProcessing()) {
+      log.debug(
+          "Waiting for crawl to complete. Current pages being processed = {}",
+          context.getNumberOfPagesBeingProcessed());
+      Thread.sleep(5000);
+    }
+    log.debug("Crawl complete.");
+  }
+
+  private void processPage(String pageURL, PageVisitor pageVisitor) {
+    final var link = toLink(pageURL);
+    synchronized (context) {
+      if (context.alreadyVisited(link)) {
+        return;
+      }
+      context.startedPage();
+      context.markLinkAsVisited(link);
     }
 
-    context.markLinkAsVisited(link);
-    pageVisitor.visit(link.canonicalURL());
-    parsePageAndProcess(link, pageVisitor);
+    Runnable processPageTask =
+        () -> {
+          synchronized (context) {
+            pageVisitor.visit(link.canonicalURL());
+          }
+          parsePageAndProcess(link, pageVisitor);
+
+          synchronized (context) {
+            context.finishedPage();
+          }
+        };
+    executor.execute(processPageTask);
   }
 
   private void parsePageAndProcess(Link link, PageVisitor pageVisitor) {
@@ -60,7 +94,7 @@ public class Spider implements Crawler {
   }
 
   private void followLink(String link, PageVisitor pageVisitor) {
-    crawl(link, pageVisitor);
+    processPage(link, pageVisitor);
   }
 
   private Link toLink(String pageURL) {
@@ -79,6 +113,7 @@ public class Spider implements Crawler {
   private static class SpiderContext {
     private String baseURL;
     private final Set<String> visitedPages = new HashSet<>();
+    private int pagesCurrentlyBeingProcessed = 0;
 
     private void markLinkAsVisited(Link link) {
       setBaseURLIfNotSet(link);
@@ -97,6 +132,22 @@ public class Spider implements Crawler {
 
     private boolean alreadyVisited(Link link) {
       return visitedPages.contains(link.canonicalURL());
+    }
+
+    private void startedPage() {
+      pagesCurrentlyBeingProcessed++;
+    }
+
+    private void finishedPage() {
+      pagesCurrentlyBeingProcessed--;
+    }
+
+    private int getNumberOfPagesBeingProcessed() {
+      return pagesCurrentlyBeingProcessed;
+    }
+
+    private boolean stillProcessing() {
+      return pagesCurrentlyBeingProcessed > 0;
     }
   }
 }

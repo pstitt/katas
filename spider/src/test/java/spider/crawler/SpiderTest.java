@@ -12,7 +12,6 @@ import spider.crawler.internal.ParsedPage;
 import spider.testhelpers.CrawlRecorder;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +30,7 @@ class SpiderTest {
   }
 
   @Test
-  void doNotFollowPageWithNoLinks() throws IOException {
+  void doNotFollowPageWithNoLinks() throws IOException, InterruptedException {
     var URL = "https://www.spidertest.com/start.html";
     var EXPECTED_LINKS = NO_LINKS;
     givenStartPage(URL)
@@ -43,7 +42,7 @@ class SpiderTest {
   }
 
   @Test
-  void followInternalCanonicalLinks() throws IOException {
+  void followInternalCanonicalLinks() throws IOException, InterruptedException {
     var URL_1 = "https://www.spidertest.com/1.html";
     var URL_2 = "https://www.spidertest.com/11.html";
     var EXPECTED_LINKS_1 = links(URL_2);
@@ -59,7 +58,7 @@ class SpiderTest {
   }
 
   @Test
-  void doNotFollowPreviouslyVisitedLinks() throws IOException {
+  void doNotFollowPreviouslyVisitedLinks() throws IOException, InterruptedException {
     var URL = "https://www.spidertest.com/start.html";
     var EXPECTED_LINKS = links(URL);
     givenStartPage(URL)
@@ -71,7 +70,7 @@ class SpiderTest {
   }
 
   @Test
-  void followInternalCanonicalPathLinks() throws IOException {
+  void followInternalCanonicalPathLinks() throws IOException, InterruptedException {
     var URL_1 = "https://www.spidertest.com/a/b.html";
     var URL_2 = "/c.html";
     var CANONICAL_URL_2 = "https://www.spidertest.com/c.html";
@@ -88,7 +87,7 @@ class SpiderTest {
   }
 
   @Test
-  void followInternalRelativePathLinks() throws IOException {
+  void followInternalRelativePathLinks() throws IOException, InterruptedException {
     var URL_1 = "https://www.spidertest.com/a/b.html";
     var URL_2 = "c.html";
     var CANONICAL_URL_2 = "https://www.spidertest.com/a/c.html";
@@ -105,7 +104,7 @@ class SpiderTest {
   }
 
   @Test
-  void doNotFollowExternalLinks() throws IOException {
+  void doNotFollowExternalLinks() throws IOException, InterruptedException {
     var URL = "https://www.spidertest.com/1.html";
     var LINK = "http://a.b.c";
     var EXPECTED_LINKS = links(LINK);
@@ -118,9 +117,22 @@ class SpiderTest {
   }
 
   @Test
-  void doNotFollowSubdomainLinks() throws IOException {
+  void doNotFollowSubdomainLinks() throws IOException, InterruptedException {
     var URL = "https://www.spidertest.com/1.html";
     var LINK = "https://support.spidertest.com";
+    var EXPECTED_LINKS = links(LINK);
+    givenStartPage(URL)
+        .andPageWithLinks(URL, EXPECTED_LINKS)
+        .whenCrawled()
+        .then()
+        .pageCountEquals(1)
+        .linksOnPage(URL).matches(EXPECTED_LINKS);
+  }
+
+  @Test
+  void doNotFollowInvalidLinks() throws IOException, InterruptedException {
+    var URL = "https://www.spidertest.com/1.html";
+    var LINK = "https://support.spidertest.com/invalid£link£with£pounds";
     var EXPECTED_LINKS = links(LINK);
     givenStartPage(URL)
         .andPageWithLinks(URL, EXPECTED_LINKS)
@@ -153,7 +165,7 @@ class PageParserMockConfigurer {
     return this;
   }
 
-  public CrawlRecorder whenCrawled() throws MalformedURLException {
+  public CrawlRecorder whenCrawled() throws InterruptedException {
     spider.crawl(startURL, crawlRecorder);
     return crawlRecorder;
   }
