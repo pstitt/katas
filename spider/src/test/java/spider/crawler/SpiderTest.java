@@ -1,4 +1,4 @@
-package spider;
+package spider.crawler;
 
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,9 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import spider.crawler.PageParser;
-import spider.crawler.ParsedPage;
-import spider.crawler.Spider;
+import spider.crawler.internal.PageParser;
+import spider.crawler.internal.ParsedPage;
 import spider.testhelpers.CrawlRecorder;
 
 import java.io.IOException;

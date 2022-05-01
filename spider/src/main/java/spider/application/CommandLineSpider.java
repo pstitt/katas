@@ -1,6 +1,6 @@
 package spider.application;
 
-import spider.crawler.JSoupPageParser;
+import spider.crawler.internal.JSoupPageParser;
 import spider.crawler.Spider;
 
 public class CommandLineSpider {

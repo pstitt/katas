@@ -2,6 +2,10 @@ package spider.crawler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import spider.crawler.internal.CrawledPageTracker;
+import spider.crawler.internal.Link;
+import spider.crawler.internal.PageParser;
+import spider.crawler.internal.ParsedPage;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

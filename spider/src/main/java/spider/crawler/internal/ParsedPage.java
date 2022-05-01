@@ -1,4 +1,4 @@
-package spider.crawler;
+package spider.crawler.internal;
 
 import java.util.List;
 

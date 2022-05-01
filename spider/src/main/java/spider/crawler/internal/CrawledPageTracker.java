@@ -1,4 +1,4 @@
-package spider.crawler;
+package spider.crawler.internal;
 
 import java.util.HashSet;
 import java.util.Set;
